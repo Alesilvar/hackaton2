@@ -1,7 +1,9 @@
 package com.ide.hackaton.usuario.domain;
 
+import com.ide.hackaton.eventos.UserRegisteredEvent;
 import com.ide.hackaton.usuario.infrastucture.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +18,14 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     public Usuario registerUsuario(Usuario usuario) {
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-        return usuarioRepository.save(usuario);
+        Usuario registeredUsuario = usuarioRepository.save(usuario);
+        eventPublisher.publishEvent(new UserRegisteredEvent(this, registeredUsuario));
+        return registeredUsuario;
     }
 
     public Optional<Usuario> findByEmail(String email) {
